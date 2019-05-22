@@ -90,3 +90,10 @@ deploy:
   type: git
   repository: https://github.com/AlexdanerZe/AlexdanerZe.github.io.git
   branch: master
+
+#百度专属站点地图
+baidusitemap:
+    path: baidusitemap.xml
+#谷歌站点地图
+sitemap:
+    path: sitemap.xml
