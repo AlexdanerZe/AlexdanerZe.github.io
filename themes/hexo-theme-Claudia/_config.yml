@@ -3,7 +3,7 @@ menu:
   Home: /
   My Works: /works
   About: /about
-  Tags: /tags 
+  #Tags: /tags
 
 rss: /atom.xml
 
