@@ -1,0 +1,104 @@
+# Header
+menu:
+  Home: /
+  My Works: /works
+  About: /about
+  Tags: /tags 
+
+rss: /atom.xml
+
+# User Info
+user_name: AlexdanerZe
+user_avatar: https://gss3.bdstatic.com/7Po3dSag_xI4khGkpoWK1HF6hhy/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=8d315255978fa0ec6bca6c5f47fe328b/2cf5e0fe9925bc31b38191fe58df8db1ca1370fc.jpg
+user_location: 广东·广州
+user_description: "产品菜鸟"
+user_contact: wudongze1998@gmail.com
+user_introduction: "现正读南昌大学 计算机科学与技术专业
+                    <p>职业方向：产品经理，程序员</p>
+                    <p>博客内容：涉及产品，影评，书评，以及方法总结等</p>
+                    <p>提升自己文字输出能力，以及能给大家带来别样的思维角度</p>"
+
+github_username: AlexdanerZe
+twitter_username: 
+weibo_username:
+zhihu_username: fcffcd588525534866f31f4967c49939
+facebook_username:
+linkedin_username: 东泽-吴-aab542186
+
+# Content
+excerpt_link: Read More
+fancybox: true
+
+# display widgets at the bottom of index pages (pagination == 2)
+#index_widgets:
+# - tagcloud
+# - archive
+category:
+  - 产品
+  - 书评
+  - 影评
+  - 编程
+tags:
+  - 项目分析
+  - 知识体系
+  - 核心竞争力
+
+
+# widget behavior
+#archive_type: 'monthly'
+#show_count: false
+
+# 评论系统
+# 不要用别人的 uid, 自己去注册一个吧
+use_livere: true
+livere_uid: MTAyMC8yOTE4Ni81NzUz
+
+use_disqus: false
+disqus_url: https://haojen.disqus.com/embed.js
+
+# Miscellaneous
+google_analytics: UA-140453638-1
+favicon: /images/favicon.ico
+#twitter:
+#google_plus:
+#fb_admins:
+#fb_app_id:
+
+# Highlight code
+# do ensure u have closed all the highlight choices in ur root _config.yml
+# currently we provided 6 choices based on highlight script
+# highlight_default, highlight_light, highlight_github, highlight_rainbow, highlight_vs, highlight_atom
+block_highlight: highlight_github
+
+markdown_it_plus:
+    highlight: true
+    html: true
+    xhtmlOut: true
+    breaks: true
+    langPrefix:
+    linkify: true
+    typographer:
+    quotes: “”‘’
+    pre_class: highlight
+    plugins:
+        - plugin:
+            name: markdown-it-mark
+            enable: true
+        - plugin:
+            name: markdown-it-toc-and-anchor
+            enable: true
+            options:
+                toc: true
+                tocClassName: 'markdownIt-TOC'
+                tocFirstLevel: 2
+                tocLastLevel: 6
+                tocCallback:
+                anchorLink: true
+                anchorLinkSymbol: ''
+                anchorFirstLevel: 2
+                anchorLastLevel: 6
+                anchorLinkSpace: true
+                anchorLinkSymbolClassName:
+                anchorLinkBefore: true
+                anchorClassName: 'markdownIt-Anchor'
+                resetIds: true
