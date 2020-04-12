@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search> 
+  
+  
+    
+    <entry>
+      <title>Gcmformojo使用教程</title>
+      <link href="/posts/5b53.html"/>
+      <url>/posts/5b53.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="Gcmformojo使用教程"><a href="#Gcmformojo使用教程" class="headerlink" title="Gcmformojo使用教程"></a>Gcmformojo使用教程</h1><p>能够使你关闭后台应用程序，但微信/QQ仍能收发消息</p><h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>1.需要一台服务器（gcm推送需要能翻墙服务器，mipush可用国内服务器）</p><p>2.服务器系统建议使用centos 7</p><p>3.需要开放端口 QQ：5000和微信：3000（具体操作建议自行查看各个vps提供商的开放端口操作）</p><p>4.最好会liunx一些操作，以及vim编辑器的常规操作</p><h2 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h2><h3 id="架设相关环境（均在root权限下）"><a href="#架设相关环境（均在root权限下）" class="headerlink" title="架设相关环境（均在root权限下）"></a>架设相关环境（均在root权限下）</h3><pre><code>yum -y groupinstall &quot;Development Tools&quot;</code></pre><pre><code>yum install vim git openssl-devel perl cpan make gcc g++</code></pre><h2 id="安装项目"><a href="#安装项目" class="headerlink" title="安装项目"></a>安装项目</h2><p>由于我们需要 Mojo::WebQQ 这个 Perl 语言项目作为主机端接收QQ消息的平台，同时 CentOS 7 自带 yum 源没有 Cpanm 包管理，所以接下来需要安装 Cpanm</p><pre class=" language-yum"><code class="language-yum">yum install perl-App-cpanminus.noarch</code></pre><pre class=" language-curl"><code class="language-curl">curl -kL https://cpanmin.us | perl - App::cpanminus官方服务器在国外，如果无法访问，可以选择下面的命令： curl http://share-10066126.cos.myqcloud.com/cpanm.pl|perl - App::cpanminus</code></pre><p>安装好cpanm，我们开始安装Mojo::Webqq</p><pre><code>cpanm Mojo::Webqq</code></pre><p>注：这个安装很玄学，往往安装不是完整的，即便我是国外的vps，可以再执行以下代码，安装国内镜像</p><pre><code>cpanm --mirror http://mirrors.163.com/cpan/ Mojo::Webqq</code></pre><p>Mojo::Weixin的安装方法大致相同</p><pre class=" language-cpanm"><code class="language-cpanm">cpanm Mojo::Weixin</code></pre><pre><code>cpanm --mirror http://mirrors.163.com/cpan/ Mojo::Weixin</code></pre><p>建议再次检查依赖模块检查</p><p>webqq:</p><blockquote><pre><code>curl -ks &quot;https://raw.githubusercontent.com/sjdy521/Mojo-Webqq/master/script/check_dependencies.pl&quot;|perl -</code></pre></blockquote><p>weixin:</p><blockquote><pre><code>curl -ks &quot;https://raw.githubusercontent.com/sjdy521/Mojo-Weixin/master/script/check_dependencies.pl&quot;|perl -</code></pre></blockquote><h3 id="设定文件"><a href="#设定文件" class="headerlink" title="设定文件"></a>设定文件</h3><p>这里我们使用vim对文件进行编辑。</p><pre class=" language-vim"><code class="language-vim"><span class="token keyword">vim</span> qq<span class="token operator">.</span>pl</code></pre><p>可能很多人不了解vim的基础操作，下面介绍一下</p><pre class=" language-i"><code class="language-i">i      进入编辑模式esc    退出编辑模式:wq      退出编辑模式下，保存并退出:q!      退出编辑模式下，强制退出:w!      退出编辑模式下，强制保存，无视权限</code></pre><p>这里给出一个 Perl 脚本文件的模板，具体内容请根据实际情况替换更改</p><pre class=" language-use"><code class="language-use">use Mojo::Webqq;#微信使用 use Mojo::Weixinmy $client = Mojo::Webqq->new(log_encoding=>"utf-8");$client->load("ShowMsg");#请根据自己所需的推送服务进行选择并删除或注释不需要的部分，填写格式请仿照 GCM 的方式填写#以下为 GCM 推送$client->load("GCM",data=>{api_url => 'https://gcm-http.googleapis.com/gcm/send',api_key=>'AIzaSyB18io0hduB_3uHxKD3XaebPCecug27ht8',registration_ids=>["输入你自己从 GCMForMojo APP中获取到的令牌"],allow_group=>["接收群消息的号码，如需要推送全部群消息可删除这一行，每个群号码之间使用 "", 分隔"],#注：group这里微信是群聊名称，qq是群号码#微信需要屏蔽公众号消息可加上 is_ban_official =>1,ban_group=>[],allow_discuss=>[],ban_discuss=>[],#此处为讨论组，填写格式同上});#以下为 MiPush 推送$client->load("MiPush",data=>{registration_ids=>[""],allow_group=>[""],ban_group=>[],allow_discuss=>[],ban_discuss=>[],});#以下为 HwPush 推送$client->load("HwPush",data=>{registration_ids=>[""],allow_group=>[""],ban_group=>[],allow_discuss=>[],ban_discuss=>[],});$client->load("UploadQRcode");$client->load("Openqq",data=>{#如果是微信改为 Openwxlisten => [{host=>"0.0.0.0",port=>5000}, ] ,#如果是推送微信的话需要保证端口不重复，并请保证所设定的端口已经在防火墙内放行，同时需要在 APP 内设定好推送服务器的地址和端口#微信可改端口3000#注：host不需要改，否则发不了消息，只需要在app上改服务器。});#不需要 APP 内回复功能请删除以上三行（不包括被 # 号注释掉的几行）$client->run();</code></pre><p>保存退出后执行</p><pre class=" language-perl"><code class="language-perl">perl qq<span class="token operator">.</span>pl</code></pre><p>这时候你的 GCMForMojo APP 应该会弹出一条检测到二维码事件的通知，点击它，使用手机端 QQ 扫描这个二维码，你的 GCMForMojo 就跑起来了</p><p>注：微信需要借助第二台设备进行扫码登陆</p><h3 id="后台运行"><a href="#后台运行" class="headerlink" title="后台运行"></a>后台运行</h3><p>perl进程并不会后台运行，这时候我们需要借助于screen命令</p><p>先安装screen</p><pre class=" language-yum"><code class="language-yum">yum install -y screen</code></pre><p>新建一个名为qqpush的screen窗口</p><pre><code>screen -S qqpush</code></pre><p>再执行</p><pre><code>perl qq.pl</code></pre><p>最后</p><pre><code>按Ctrl +a +d</code></pre><p>便可以退出客户端并且保持后台进行了</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 工具相关 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Push </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Fcmformojo使用教程</title>
+      <link href="/posts/9783.html"/>
+      <url>/posts/9783.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="Fcmformojo使用教程"><a href="#Fcmformojo使用教程" class="headerlink" title="Fcmformojo使用教程"></a>Fcmformojo使用教程</h1><p>能够使你关闭后台应用程序，但微信/QQ仍能收发消息</p><h2 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h2><p>1.需要一台服务器</p><p>2.服务器系统建议使用centos 7</p><p>3.需要开放端口 5003/5004/5005（具体操作建议自行查看各个vps提供商的开放端口操作）</p><p>4.最好会liunx一些操作，以及vim编辑器的常规操作</p><h2 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h2><h3 id="假设相关环境"><a href="#假设相关环境" class="headerlink" title="假设相关环境"></a>假设相关环境</h3><pre><code>yum -y groupinstall &quot;Development Tools&quot;</code></pre><pre><code>yum install vim git openssl-devel perl cpan make gcc g++</code></pre><p>安装EPEL 仓库</p><pre><code>yum install epel-release</code></pre><p>安装nodejs</p><pre><code>yum install nodejs</code></pre><p>安装npm</p><pre><code>yum install npm</code></pre><p>安装git</p><pre><code>yum install git</code></pre><h2 id="安装项目"><a href="#安装项目" class="headerlink" title="安装项目"></a>安装项目</h2><p>由于我们需要 Mojo::WebQQ 这个 Perl 语言项目作为主机端接收QQ消息的平台，同时 CentOS 7 自带 yum 源没有 Cpanm 包管理，所以接下来需要安装 Cpanm</p><pre class=" language-yum"><code class="language-yum">yum install perl-App-cpanminus.noarch</code></pre><pre class=" language-curl"><code class="language-curl">curl -kL https://cpanmin.us | perl - App::cpanminus官方服务器在国外，如果无法访问，可以选择下面的命令： curl http://share-10066126.cos.myqcloud.com/cpanm.pl|perl - App::cpanminus</code></pre><p>安装好cpanm，我们开始安装Mojo::Webqq</p><pre><code>cpanm Mojo::Webqq</code></pre><p>注：这个安装很玄学，往往安装不是完整的，即便我是国外的vps，可以再执行以下代码，安装国内镜像</p><pre><code>cpanm --mirror http://mirrors.163.com/cpan/ Mojo::Webqq</code></pre><p>安装拓展：</p><pre><code>yum install -y perl-Crypt-OpenSSL-RSA perl-Crypt-OpenSSL-Bignum</code></pre><p>建议再次检查依赖模块检查</p><p>webqq:</p><blockquote><pre><code>curl -ks &quot;https://raw.githubusercontent.com/sjdy521/Mojo-Webqq/master/script/check_dependencies.pl&quot;|perl -</code></pre></blockquote><h5 id="下载服务端"><a href="#下载服务端" class="headerlink" title="下载服务端"></a>下载服务端</h5><p>执行下面几条命令来下载服务端并安装所需的 node 依赖。</p><pre><code>git clone https://github.com/RikkaApps/FCM-for-Mojo-Server.gitcd FCM-for-Mojo-Servercp config.example.js config.jsnpm install</code></pre><p>运行</p><blockquote><p>为避免错过二维码扫描通知而不知所措，建议在运行前先完成客户端配置的一部分（填写好服务器 URL）。</p></blockquote><pre><code>npm start</code></pre>]]></content>
+      
+      
+      <categories>
+          
+          <category> 工具相关 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Push </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>520产品复盘</title>
+      <link href="/posts/ae8c.html"/>
+      <url>/posts/ae8c.html</url>
+      
+        <content type="html"><![CDATA[<h2 id="综述"><a href="#综述" class="headerlink" title="综述"></a><strong>综述</strong></h2><p>工作室”520”活动结束感慨良多，无论是在安排任务给新生，还是自己对于产品的把控，还是存在蛮多的不足，需要改进。</p><h2 id="文章大纲"><a href="#文章大纲" class="headerlink" title="文章大纲"></a><strong>文章大纲</strong></h2><p>@[TOC]</p><h2 id="复盘总结"><a href="#复盘总结" class="headerlink" title="复盘总结"></a><strong>复盘总结</strong></h2><blockquote><p>复盘结构，我会按照项目开发流程进行结果评估以及改进建议</p></blockquote><h4 id="0-结果总结"><a href="#0-结果总结" class="headerlink" title="0.结果总结"></a><strong>0.结果总结</strong></h4><p>这是工作室对校内做的一次线上产品辅助线下活动开展的运营活动。</p><p>从数据上看，尽管这次活动近4000的浏览量和2500多的唯一身份浏览量，但是当我根据业务流程建立相应的漏斗模型，发现最后的转化效果不佳，只有25%左右的转化效果。</p><p>从目的上看，对于新生练手体验来说，这次活动起着一定作用，但是在扩大影响力上看，仍做的不好，问题出现在前期对产品定义存在问题，以及后续活动制定跟不上。</p><h4 id="1-目标确立阶段"><a href="#1-目标确立阶段" class="headerlink" title="1.目标确立阶段"></a><strong>1.目标确立阶段</strong></h4><p>这次活动的发起是由多方的需求促成的。</p><ul><li>中心组：需要有落地的产品，扩大家园影响力。</li><li>产品组：需要通过产品上线后验证现产品组业务能力是否过关，以及体会数据分析相关操作。</li><li>运营组：需要尝试活动策划相关，提升微信公众号影响力。</li><li>研发组：需要学会如何进行项目排期，测试等。</li></ul><p>目标：根据近期热点(520情人节活动)，设计线上产品，并加以线下活动，达到扩大家园影响力的作用。</p><h4 id="2-需求阶段"><a href="#2-需求阶段" class="headerlink" title="2.需求阶段"></a><strong>2.需求阶段</strong></h4><h5 id="2-1-需求分析阶段"><a href="#2-1-需求分析阶段" class="headerlink" title="2.1 需求分析阶段"></a><strong>2.1 需求分析阶段</strong></h5><blockquote><p>个人分析：</p><p>从用户上分析：用户可分为情侣，和单身贵族。</p><p>情侣：”520”这一含有谐音寓意的节日的出现，我看来更多的是因为情侣之间所需的仪式感，那么对于如何实现仪式感，我会更倾向”秀恩爱”这一行为。针对情侣，我就会突出”秀”这个动词。</p><p>单身贵族：相对的，正因为有对美好事物的向往，但不能够拥有，从而生成”柠檬精”这一新生词。那么在这种看似专属的情侣的节日，我们可以针对单身贵族，我就会突出”酸”这个动词。</p></blockquote><p>新生想法：没能够在我所提出的产品方向，想到好点子或者认为部分点子太low，不能够拉动用户，（我忽略了运营其自身对产品的认知不足等问题）。在产品上，选择了以答题形式测试双方的默契度，但在产品流程上没有做的很完善。</p><p>作为指导者，我认为不应该对新生的工作加以过多干涉以及需要让运营做主导，对于产品把控上，错误得将产品方向交由运营把控，尽管最后对产品新生说明需要把控产品方向，但在团队多人合作中，产品新生没能够通过自己的产品思维说服团队。</p><h5 id="2-2-需求定义阶段"><a href="#2-2-需求定义阶段" class="headerlink" title="2.2 需求定义阶段"></a><strong>2.2 需求定义阶段</strong></h5><h6 id="2-2-1-需求文档输出："><a href="#2-2-1-需求文档输出：" class="headerlink" title="2.2.1 需求文档输出："></a><strong>2.2.1 需求文档输出：</strong></h6><h6 id="不够完整，异常情况不完整，业务流程仍有漏洞。"><a href="#不够完整，异常情况不完整，业务流程仍有漏洞。" class="headerlink" title="不够完整，异常情况不完整，业务流程仍有漏洞。"></a>不够完整，异常情况不完整，业务流程仍有漏洞。</h6><h6 id="2-2-2-用户场景："><a href="#2-2-2-用户场景：" class="headerlink" title="2.2.2 用户场景："></a><strong>2.2.2 用户场景：</strong></h6><p>​        对于用户场景不够明确，用户未能按照预想场景进行操作。</p><p><strong>修改建议：</strong></p><ol><li>对于每个功能点的业务流程（包括异常状况），必须明确清晰。</li><li>对于用户画像以及场景设置，需要在抽象出用户特征后，更加准确地构建。</li></ol><h5 id="2-3-需求变更阶段"><a href="#2-3-需求变更阶段" class="headerlink" title="2.3 需求变更阶段"></a><strong>2.3 需求变更阶段</strong></h5><h6 id="2-3-1-需求变更次数："><a href="#2-3-1-需求变更次数：" class="headerlink" title="2.3.1 需求变更次数："></a><strong>2.3.1 需求变更次数：</strong></h6><p>​        较多</p><h6 id="2-3-2-需求变更影响："><a href="#2-3-2-需求变更影响：" class="headerlink" title="2.3.2 需求变更影响："></a><strong>2.3.2 需求变更影响：</strong></h6><ol><li>因为微信认证没有及时确认是否成功，导致用户体系变动。</li><li>对于需求变动后的解决方式考虑不周。</li><li>需求文档没有及时更新，业务逻辑不清晰，导致研发设计在开发过程中需要增加工作量。</li><li>团队沟通没有及时跟上，产品新生脱节。</li></ol><p><strong>修改建议：</strong>        </p><ol><li>产品在前期必须将产品所需文件在第一时间提交，确认。</li><li>产品在需求变动过程中，需要根据工期以及原先预定的目标，修改相关需求内容，而不是救急式修改。</li><li>加强团队沟通，让整个团队知道当前项目状况。</li></ol><h4 id="3-上线阶段"><a href="#3-上线阶段" class="headerlink" title="3.上线阶段"></a><strong>3.上线阶段</strong></h4><h5 id="3-1-线上产品"><a href="#3-1-线上产品" class="headerlink" title="3.1 线上产品"></a><strong>3.1 线上产品</strong></h5><ol><li>我们通过加强了反馈问题机制，收集用户反馈问题，及时采取相应的方案去解决。</li></ol><h5 id="3-2-线下活动"><a href="#3-2-线下活动" class="headerlink" title="3.2 线下活动"></a><strong>3.2 线下活动</strong></h5><ol><li>活动形式没有切合目的，只想了给产品活跃的形式，没有进行相对应的转化。</li></ol><h4 id="4-后续思考"><a href="#4-后续思考" class="headerlink" title="4.后续思考"></a><strong>4.后续思考</strong></h4><h5 id="待续"><a href="#待续" class="headerlink" title="待续"></a>待续</h5><h5 id=""><a href="#" class="headerlink" title=""></a></h5>]]></content>
+      
+      
+      <categories>
+          
+          <category> 产品 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 复盘 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Hello World</title>
+      <link href="/posts/undefined.html"/>
+      <url>/posts/undefined.html</url>
+      
+        <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><pre class=" language-bash"><code class="language-bash">$ hexo new <span class="token string">"My New Post"</span></code></pre><p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><pre class=" language-bash"><code class="language-bash">$ hexo server</code></pre><p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><pre class=" language-bash"><code class="language-bash">$ hexo generate</code></pre><p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><pre class=" language-bash"><code class="language-bash">$ hexo deploy</code></pre><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html" target="_blank" rel="noopener">Deployment</a></p>]]></content>
+      
+      
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>需求分析及案例</title>
+      <link href="/posts/36e2.html"/>
+      <url>/posts/36e2.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="需求分析及案例"><a href="#需求分析及案例" class="headerlink" title="需求分析及案例"></a>需求分析及案例</h1><blockquote><p>个人总结产品经理相关学习，需求分析篇</p></blockquote><h2 id="一、需求分析总结"><a href="#一、需求分析总结" class="headerlink" title="一、需求分析总结"></a>一、需求分析总结</h2><h3 id="1-需求是什么以及有什么特点"><a href="#1-需求是什么以及有什么特点" class="headerlink" title="1.需求是什么以及有什么特点"></a>1.需求是什么以及有什么特点</h3><p>需求，说白了就是“人的欲望合集”，但为方便工作中对需求有更好的拆解，利用需求模型——<strong>“用户在特定场景下所遇到的问题”</strong>。可以发现存在三个关键要素，<strong>“用户”</strong>，“<strong>场景”</strong>，<strong>“问题”</strong>，但都较为抽象，笔者通过细分相关维度的方式，以加深理解。</p><ul><li><p><strong>用户</strong>：年龄 / 性别 / 教育 / 家庭情况 / 经济水平 / 行为习惯 /身份 / …</p></li><li><p><strong>场景</strong>：地点 / 时间 / 状态 / …</p></li><li><p><strong>问题</strong>：</p><ul><li>抽象需要（需求金字塔）：<ul><li>生理：吃/喝/排泄/性/休息 / …</li><li>安全：疾病/暴力/社会 / …</li><li>感情：友情/爱情/亲情 / …</li><li>尊重：自尊/他人尊重 / …</li><li>自我实现：理想 / …</li></ul></li><li>实际问题</li></ul><p>举个例子，方便大家理解，一位大学生男生在观看完NBA总决赛后，热血沸腾，相约朋友去打球，却发现球场人满了，打不了球，从而感到失望。我们进行细化分解，可以得到：</p></li><li><p>“用户”是大学生（<em>教育、年龄</em>）男生（<em>性别</em>）</p></li><li><p>“场景”是观看完NBA总决赛（<em>时间</em>）， 热血沸腾（<em>状态</em>），到球场（<em>地点</em>）</p></li><li><p>“问题”是打不了球（<em>实际问题</em>），热血沸腾到失望（<em>感情</em>）</p></li></ul><p>但从中我们可以发现，如果修改当中某些因素，该需求可能不成立，比如时间改为深夜，球场为空可能性极大，不存在打不了球的情况，也不存在热血沸腾的问题，又或者是他不是一位球迷，不关心NBA，进而不会产生一系列动作。</p><p>这说明了要素之间会相互影响，进而我们得到<strong>需求的特点</strong>：</p><ul><li><strong>受限制的</strong>：三个要素相互之间必须满足一定的关系才能使需求具有实际意义。</li><li><strong>动态的</strong>：要素的修改会导致需求发生变化。</li></ul><p>这有助于发现需求时，提醒自己可能需要注意，勿轻下结论。</p><h3 id="2-需求的来源"><a href="#2-需求的来源" class="headerlink" title="2.需求的来源"></a>2.需求的来源</h3><p>当我们了解了需求是什么之后，我们得找找需求可以从什么途径获得。笔者在收集整理后，可以大致归为以下几类：</p><ul><li><strong>产品规划类需求</strong>：是需要提前思考清楚产品模型所制定的需求，梳理出产品路线图。路线图可以调整，但是核心需求逻辑是不变的。</li></ul><ol start="2"><li><strong>用户类需求</strong>：产品用户画像以及用户操作行为记录分析出来的需求。这部分需求需要针对特定用户做访谈调研确认需求。</li></ol><ul><li><strong>数据分析类需求</strong>：通过产品数据反馈出来的需求。此需求一定要有特定的数据服务。</li><li><strong>业务类需求</strong>：根据业务方提出来的需求配合当前产品规划类需求制定业务需求池。前提这类型需求必须提前知悉业务计划。</li></ul><h3 id="3-需求优先级判定"><a href="#3-需求优先级判定" class="headerlink" title="3.需求优先级判定"></a>3.需求优先级判定</h3><p>当我们获得足够多的需求后，存在着这样的问题：该先做什么呢？所以这时候需要有指标帮助判断，而笔者认为投入产出比（ROI）则是一个很好的评判指标，具体如下：</p><p><strong>投入产出比（ROI）</strong>即 所获得的价值与消耗的成本之比</p><ul><li><strong>消耗成本</strong>：人力成本、物资成本、机会成本等</li><li><strong>收益价值</strong>：<ul><li><strong>用户价值：影响面×影响体验</strong>（影响面是这一类用户人群规模有多大，影响体验指实现这个需求后与原有解决方案相比用户体验会好多少）</li><li><strong>盈利价值：流量、用户、业务、内容等可变现因素能否提升总量/使用率，关注质量水平、可持续性、量级、转化率等指标变化</strong><ul><li><strong>流量</strong>：流量总量是否提升？提升多少？质量如何？…</li><li><strong>用户</strong>：注册用户是否增加？增加多少？转化为活跃用户有多少？转化率多高？转化为付费用户又有多少？转化率又又多高？…</li><li><strong>业务</strong>：是否帮助核心业务效率提升？是否提高业务使用率？是否能够持续进行？…</li><li><strong>内容</strong>：社区产品/内容产品的活跃度是否提高？期间产出内容质量/总量是否提高？….</li></ul></li></ul></li><li><strong>注意</strong>：<ol><li>同样ROI的情况下，绝对收益价值高优先完成</li><li>短期内严重威胁盈利价值，优先完成</li></ol></li></ul><h3 id="4-需求平衡"><a href="#4-需求平衡" class="headerlink" title="4.需求平衡"></a>4.需求平衡</h3><p>当产品的用户并非单边的，而是多边时，我们需要再做一步——需求平衡，基本的思想是：</p><ul><li>确定产品及企业生命周期<ul><li>探索期（验证需求存在）</li><li>成长期（用户量和业务量规模化增长）</li><li>成熟期（更出色的业务流程，更细致用户群体）</li><li>衰退期（）</li></ul></li><li>确定当前任务重心</li></ul><h2 id="二、案例"><a href="#二、案例" class="headerlink" title="二、案例"></a>二、案例</h2><h3 id="1-直播电商"><a href="#1-直播电商" class="headerlink" title="1.直播电商"></a>1.直播电商</h3>]]></content>
+      
+      
+      <categories>
+          
+          <category> 产品 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 个人总结 </tag>
+            
+            <tag> 需求分析 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>直播电商行业及玩家分析</title>
+      <link href="/posts/f928.html"/>
+      <url>/posts/f928.html</url>
+      
+        <content type="html"><![CDATA[<h2 id="综述"><a href="#综述" class="headerlink" title="综述"></a>综述</h2><p>​    本文目的是锻炼自己的行业分析能力，以及清晰地输出报告，所写内容仅供参考。</p><h2 id="一、行业定义"><a href="#一、行业定义" class="headerlink" title="一、行业定义"></a>一、行业定义</h2><p>​    直播电商主要</p><h2 id="二、行业规模"><a href="#二、行业规模" class="headerlink" title="二、行业规模"></a>二、行业规模</h2><h3 id="1-电商行业规模"><a href="#1-电商行业规模" class="headerlink" title="1.电商行业规模"></a>1.电商行业规模</h3><p>​    移动电商活跃用户规模当前达到6.7亿左右量级，仍呈上升趋势（Mob研究院）</p><p><img src="http://q6oaokawz.bkt.clouddn.com/%E7%94%B5%E5%95%86%E7%94%A8%E6%88%B7%E8%A7%84%E6%A8%A1.png" alt=""></p><p>​    下沉市场电商用户规模维持在3亿以上，占比逐步提高（Mob研究院）</p><p><img src="http://q6oaokawz.bkt.clouddn.com/%E4%B8%8B%E6%B2%89%E7%94%A8%E6%88%B7%E5%B8%82%E5%9C%BA.png" alt="image-20200401130850077"></p><p>​    </p><h3 id="2-直播电商"><a href="#2-直播电商" class="headerlink" title="2. 直播电商"></a>2. 直播电商</h3><h2 id="三、行业核心竞争力"><a href="#三、行业核心竞争力" class="headerlink" title="三、行业核心竞争力"></a>三、行业核心竞争力</h2><h2 id="四、常规模式"><a href="#四、常规模式" class="headerlink" title="四、常规模式"></a>四、常规模式</h2><h2 id="五、赛道玩家分析"><a href="#五、赛道玩家分析" class="headerlink" title="五、赛道玩家分析"></a>五、赛道玩家分析</h2><h2 id="六、未来发展"><a href="#六、未来发展" class="headerlink" title="六、未来发展"></a>六、未来发展</h2><h2 id="七、总结"><a href="#七、总结" class="headerlink" title="七、总结"></a>七、总结</h2>]]></content>
+      
+      
+      <categories>
+          
+          <category> 产品 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 行业总结 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>用户体验要素理解</title>
+      <link href="/posts/c3ad.html"/>
+      <url>/posts/c3ad.html</url>
+      
+        <content type="html"><![CDATA[<blockquote><p>初读用户体验要素，感觉很简单很浅显，更像是一本工具书。而到现在了解了产品以及完成了几次产品和活动后，该书逻辑缜密且细微，一步步地明确产品从0到1的过程，更多地是教会一种思维方法。希望下次读此书时，能够有另外一番感受！</p></blockquote><h2 id="文章大纲"><a href="#文章大纲" class="headerlink" title="文章大纲"></a>文章大纲</h2><p>@[TOC]</p><p>&nbsp;</p><h2 id="大致框架"><a href="#大致框架" class="headerlink" title="大致框架"></a>大致框架</h2><p><img src="%E7%94%A8%E6%88%B7%E4%BD%93%E9%AA%8C%E8%A6%81%E7%B4%A0.png" alt=""></p><p>&nbsp;</p><h2 id="一、战略层"><a href="#一、战略层" class="headerlink" title="一、战略层"></a>一、战略层</h2><blockquote><p>战略层：明确产品需要达到的目标</p></blockquote><h3 id="1-产品目标"><a href="#1-产品目标" class="headerlink" title="1.产品目标"></a>1.产品目标</h3><p>​    产品目标更多是站在企业角度去思考，做了这个产品能给公司带来多大的利益。这个利益不仅仅指的是金钱，包括品牌形象，数据内容填充等等方面。</p><p>​    切记：涉及目标，能够量化尽量量化，否则无法定义完成。</p><h3 id="2-用户需求"><a href="#2-用户需求" class="headerlink" title="2.用户需求"></a>2.用户需求</h3><p>​    用户需求更多是站在用户角度去思考，用户能通过产品解决他们什么问题。</p><p>​    切记：1.你的需求并不是用户的需求。</p><p>​                2.需求并不需要你去与用户交流从而证明出来的。</p><p>​                3.不要误入幸存者偏差，用户样本的维度需要大。</p><p>​                4.需求是针对70%左右的用户。</p><p>​                5.不要被用户的表层需求所欺骗。</p><p>&nbsp;</p><h2 id="二、范围层"><a href="#二、范围层" class="headerlink" title="二、范围层"></a>二、范围层</h2><blockquote><p>范围层：明确功能开发边界</p></blockquote><h3 id="1-功能规格"><a href="#1-功能规格" class="headerlink" title="1.功能规格"></a>1.功能规格</h3><p>​    以文档的形式进行功能边界的确定(需求池管理/需求优先级排列)。</p><p>​    注意：乐观（通过别的行为防止不好的情况发生）、具体、避免主观的语气、需求可验证(明确需求的标准)。</p><h3 id="2-内容需求"><a href="#2-内容需求" class="headerlink" title="2.内容需求"></a>2.内容需求</h3><p>​    对于功能所需要的信息，尽早明确。</p><p>&nbsp;</p><h2 id="三、结构层"><a href="#三、结构层" class="headerlink" title="三、结构层"></a>三、结构层</h2><blockquote><p>结构层：将功能分块整理</p></blockquote><h3 id="1-交互设计"><a href="#1-交互设计" class="headerlink" title="1.交互设计"></a>1.交互设计</h3><p>​    关注描述”可能的用户行为”，同时定义”系统如何配合与相应”这些用户行为。</p><p>​    <strong>概念模型</strong>：用户对于”交互组件将怎样工作”的观点。</p><p>​    <strong>错误处理</strong>：错误提示设计。</p><h3 id="2-信息架构"><a href="#2-信息架构" class="headerlink" title="2.信息架构"></a>2.信息架构</h3><p>​    着重于设计组织分类和导航的结构，从而让用户可以高效率地浏览网站的内容。</p><p>​    <strong>结构方向</strong>：从上到下，从下到上</p><p>​    <strong>结构类型</strong>：层级结构、矩阵结构（多维度）、自然结构（探索性强）、线性结构</p><p>​    <strong>组织原则</strong>：节点应该按照什么原则进行分类。</p><p>​    <strong>语言和元数据</strong>：”使用用户的语言”并且”保持一致性”。</p><p>​        </p><p>&nbsp;</p><h2 id="四、框架层"><a href="#四、框架层" class="headerlink" title="四、框架层"></a>四、框架层</h2><blockquote><p>框架层：关注页面与组件</p></blockquote><h3 id="1-界面设计"><a href="#1-界面设计" class="headerlink" title="1.界面设计"></a>1.界面设计</h3><p>​    突出重点信息，过滤垃圾信息。</p><h3 id="2-导航设计"><a href="#2-导航设计" class="headerlink" title="2.导航设计"></a>2.导航设计</h3><p>​    明确当前页面内容，展示下一步内容定义概述，定义前进方向展示形式</p><p>​    (可有的导航形式：全局导航、局部导航、辅助导航、上下文导航（超链接）、友好导航(友方链接)、网站地图、索引表)</p><h3 id="3-信息设计"><a href="#3-信息设计" class="headerlink" title="3.信息设计"></a>3.信息设计</h3><p>​    互联网中的交互设计师的职责。</p><p>&nbsp;</p><h2 id="五、表现层"><a href="#五、表现层" class="headerlink" title="五、表现层"></a>五、表现层</h2><blockquote><p>表现层：视觉美化    </p></blockquote><p>​    <strong>忠于眼睛</strong>：眼球追踪。</p><p>​    <strong>对比和一致性</strong></p><p>​    <strong>内部和外部的一致性</strong></p><p>​    <strong>配色方案和排版</strong></p><p>​    <strong>设计合成品和风格指南</strong></p><h2 id="六、总结"><a href="#六、总结" class="headerlink" title="六、总结"></a>六、总结</h2><p>​    用类比的手法来讲，pm是一位造物主，产品是即将创造的事物，这暂将产品当做人来类比。战略层，范围层是人的大脑思想，且拥有高度信仰，战略层明确自己要解决什么问题，范围层则是知道自己拥有多少能力去解决问题。结构层，框架层，表现层则组成了人的形状，结构层是骨骼，明确了产品的大概形状；框架层是血肉，丰富了产品的形状；表现层则是皮肤，让整个产品看起来有多美。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 产品 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 总结归纳 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>产品工作架构</title>
+      <link href="/posts/fd.html"/>
+      <url>/posts/fd.html</url>
+      
+        <content type="html"><![CDATA[<blockquote><p>对产品工作上的内容进行总结。</p></blockquote><h2 id="文章大纲"><a href="#文章大纲" class="headerlink" title="文章大纲"></a>文章大纲</h2><h2 id=""><a href="#" class="headerlink" title=""></a></h2>]]></content>
+      
+      
+      <categories>
+          
+          <category> 产品 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 总结归纳 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>产品核心竞争力</title>
+      <link href="/posts/290d.html"/>
+      <url>/posts/290d.html</url>
+      
+        <content type="html"><![CDATA[<h2 id="综述"><a href="#综述" class="headerlink" title="综述"></a>综述</h2><p>在接触产品这一职位两年后，发现自己的知识框架仍不够成熟，以及在学习方向上存在太杂太乱的问题。所以我萌生出了要整理出自己对产品核心竞争力的理解。</p><h2 id="核心竞争力"><a href="#核心竞争力" class="headerlink" title="核心竞争力"></a>核心竞争力</h2><h4 id="一、核心竞争力的作用"><a href="#一、核心竞争力的作用" class="headerlink" title="一、核心竞争力的作用"></a>一、核心竞争力的作用</h4><p>在明确产品核心竞争力之前，我们需要知道核心竞争力的作用会是什么，为什么需要明确自己的核心竞争力。</p><ul><li>明确与他人的能力差距在哪</li><li>明确自己学习以及成长方向        </li></ul><h4 id="二、核心竞争力是什么"><a href="#二、核心竞争力是什么" class="headerlink" title="二、核心竞争力是什么"></a>二、核心竞争力是什么</h4><ul><li><p><strong>成熟思维框架</strong></p></li><li><p><strong>学习能力</strong></p></li><li><p><strong>同理心</strong></p></li><li><p><strong>通识</strong></p></li><li><p><strong>热情与好奇心</strong></p></li><li><p><strong>追求完美</strong></p><p><strong>成熟思维框架，学习能力，同理心，通识归属于在完成工作的能力上，热情与好奇心，追求完美则是在产品做事时的态度。</strong></p></li></ul><h4 id="1-成熟思维框架"><a href="#1-成熟思维框架" class="headerlink" title="1.成熟思维框架"></a><strong>1.成熟思维框架</strong></h4><p>​    成熟的思维框架能够在我们思考的时候提高我们的效率以及全面性。打个比方，当你需要负责一个关于</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 产品 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 个人总结 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+  
+  
+</search>
