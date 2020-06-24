@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="https://alexdanerze.top/"/>
-  <updated>2020-06-23T07:38:51.161Z</updated>
+  <updated>2020-06-23T07:38:51.167Z</updated>
   <id>https://alexdanerze.top/</id>
   
   <author>
@@ -15,21 +15,6 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
-  
-  <entry>
-    <title>test</title>
-    <link href="https://alexdanerze.top/posts/d87f7e0c.html"/>
-    <id>https://alexdanerze.top/posts/d87f7e0c.html</id>
-    <published>2020-06-23T07:38:36.000Z</published>
-    <updated>2020-06-23T07:38:51.161Z</updated>
-    
-    <summary type="html">
-    
-    </summary>
-    
-    
-    
-  </entry>
   
   <entry>
     <title>直播电商竞品分析</title>
@@ -192,11 +177,34 @@
   </entry>
   
   <entry>
+    <title>SQL练习题</title>
+    <link href="https://alexdanerze.top/posts/780c7923.html"/>
+    <id>https://alexdanerze.top/posts/780c7923.html</id>
+    <published>2020-01-22T01:24:46.000Z</published>
+    <updated>2020-06-24T01:53:52.477Z</updated>
+    
+    <summary type="html">
+    
+      
+      
+        
+        
+          &lt;h1 id=&quot;Mysql-练习题&quot;&gt;&lt;a href=&quot;#Mysql-练习题&quot; class=&quot;headerlink&quot; title=&quot;Mysql 练习题&quot;&gt;&lt;/a&gt;Mysql
+        
+      
+    
+    </summary>
+    
+    
+    
+  </entry>
+  
+  <entry>
     <title>基于Python对滴滴出行路程和时间与费用关系的数据分析与预测</title>
     <link href="https://alexdanerze.top/posts/d57ef69.html"/>
     <id>https://alexdanerze.top/posts/d57ef69.html</id>
     <published>2019-12-22T01:27:27.000Z</published>
-    <updated>2020-06-23T13:53:23.325Z</updated>
+    <updated>2020-06-23T13:55:32.744Z</updated>
     
     <summary type="html">
     
